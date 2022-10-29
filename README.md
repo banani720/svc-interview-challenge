@@ -1,49 +1,49 @@
-# SVT Robotics - Take Home Recruiting Assessment
+# SVT Robotics Take Home Test - Basel Anani
 
-One of SVT's microservices calculates which robot should transport a pallet from point A to point B based on which robot is the closest and has the most battery left if there are multiple in the proximity of the load's location. You'll use a provided API endpoint to create a simplified robot routing API.
+### 1. API Written in JS
+The code for the API can be found in src/index.js. The route to send the POST request JSON to is http://localhost:500/api/robots/closest
+Should you choose to modify the listening port you may modify the `port` constant
 
-This is the endpoint to retrieve a list of robots in our robot fleet: https://60c8ed887dafc90017ffbd56.mockapi.io/robots. Note: if that URL doesn't work, a mirror is available here - https://svtrobotics.free.beeceptor.com/robots.
+### 2. API can be run locally and tested using Postman or similar web tools
 
-The provided API returns a list of all 100 robots in our fleet. It gives their current position on an xy-plane along with their battery life. Your job is to write an API with an endpoint which accepts a payload with a load which needs to be moved including its identifier and current x,y coordinates and your endpoint should make an HTTP request to the robots endpoint and return which robot is the best to transport the load based on which one is closest the load's location. If there is more than 1 robot within 10 distance units of the load, return the one with the most battery remaining.
+- Environment
+    - This application uses `Node v16.18.0`
+        - This applications depends on [node-fetch v2.6.7](https://www.npmjs.com/package/node-fetch/v/2.6.1), [express v4.18.2](https://www.npmjs.com/package/express), and [body-parser v1.20.1](https://www.npmjs.com/package/body-parser)
+- Running the application
+    - After cloning this repository, in a terminal directory `cd` in to the root project directory and run `npm install`
+    - After package installation is complete run `node ./src/index.js`, a message in the terminal stating `Listening on port 5000` indicates the server is up and runnning
+- Testing with [Postman](https://learning.postman.com/docs/getting-started/introduction/)
+    - Select `New` on the left side of the screen near where it says `Scratch Pad`
+    - Select `HTTP Request`
+    - In the URL text box type `http://localhost:5000/api/robots/closest`
+    - Change the request method from `GET` to `POST` using the dropdown menu
+    - Select the `Body` tab, select the `raw` bullet point and change the input type to `JSON` from the dropdown (defaults to `Text`)
+    - Send a request that follows the following pattern
+    ```json
+    {
+        "loadId" : <some-integer>,
+        "x" : <some-integer>,
+        "y" : <some-integer>
+    }
+    ```
+    - Click the send button, the API response will be visible at the bottom of the view in the `Response` section
+- Testing with [cURL](https://curl.se/docs/)
+    - If curl is not installed, follow installation instructions in the linked Curl docs, verify installation with `curl --version`
+    - Run `curl -X POST http://localhost:5000/api/robots/closest -H "Content-Type: application/json" -d '{"loadId": <some-integer>, "x": <some-integer>, "y": <some-integer>}'`
+    - The response will be returned inside the terminal
+### 3. Description of features, functionality I would add and how I would implement them
 
-The distance between two points is found with the following formula:
+- Features I would implement
+    - My initial thought was well what would we do after we idenitfy which robot is responsible for moving and picking up the load? It stands to reason that the robots are perhaps updating their location within the API, with this thought in mind, perhaps we want to add a listener to the API listening to changes to the robot's location. We could use a WebSocket with a small enough refresh and track the movements of that robot towards the load. Expanding on this we could set up a route to track load pick-ups with statuses such as queued, en-route, and picked-up. When the load is sent and an appropriate robot is identified we could set that status of the load to queued. As the robot begins to move towards it's destination updates to the location would trigger an en-route status. Upon arrival to the load, the status could move to picked-up. We could take this tracking even further if we were to obtain the destination x,y-coordinates and add a status of delivered to the load tracking pickups
 
-![distance formula](https://user-images.githubusercontent.com/7139741/122107356-f915e300-cde8-11eb-8699-f87b50046350.png)
-
-If the API receives a JSON payload of:
-
-```
-{
-    loadId: 231, //Arbitrary ID of the load which needs to be moved.
-    x: 5, //Current x coordinate of the load which needs to be moved.
-    y: 3 //Current y coordinate of the load which needs to be moved.
-}
-```
-
-It should respond with a JSON payload of _(note: this is just an example, your results may be different depending on the data available from the API at the time.)_:
-
-```
-{
-    robotId: 58,
-    distanceToGoal: 49.9, //Indicates how far the robot is from the load which needs to be moved.
-    batteryLevel: 30 //Indicates current battery level of the robot.
-}
-```
-
-### Requirements
-
-1. API with POST endpoint that accepts and returns data per the above task description
-   1. POST endpoint **must** be **`https://localhost:5001/api/robots/closest/`** or **`http://localhost:5000/api/robots/closest/`**
-   2. POST endpoint **must** accept and return JSON
-2. API can be run locally and tested using Postman or other similar tools
-3. Description of what features, functionality, etc. you would add next and how you would implement them - you shouldn't spend more than a few hours on this project, so we want to know what you'd do next (and how you'd do it) if you had more time
-4. Use git and GitHub for version control
-5. Have fun! We're interested in seeing how you approach the challenge and how you solve problems with code. The goal is for you to be successful, so if you have any questions or something doesn't seem clear don't hesitate to ask. Asking questions and seeking clarification isn't a negative indicator about your skills - it shows you care and that you want to do well. Asking questions is always encouraged at SVT Robotics, and our hiring process is no different.
-
-Deliverables Checklist
-
-1. API written in Javascript, Typescript, .NET Core, or a similar language
-2. API accepts POST and returns data per above requirements
-3. Repo README has instructions for running and testing the API
-4. Repo README has information about what you'd do next, per above requirements
-5. Create a new public GitHub repo and upload its url to the link you received in your test invite.
+    - I would also implement a comprehensive testing infrastructure, in this project we are able to test manually through sending mock requests to Postman and we could with some work manually verify the results. What would be much more efficient would be to automate our testing infrastructure to verify that our robot choosing algorithm is actually picking out the optimal solution based on the problem parameters we are given. I would use [Jest](https://jestjs.io/docs/getting-started) for unit testing. So as to not add stress to our API with test calls on top of the calls that our API would be getting in production we could store a limited data set and then mock the HTTP request to the robots API and have it return the limited list of robots. We would want to test each of the different code paths that it is possible for us to follow so the tests I would implement would be the following test
+        - Test route `/{some_random_string}` returns a proper `404 - Not Found` Response
+        - Test blank route `/` renders a proper `404 - Not Found`
+        - Test request to `/api/robots/closest` that does not contain a `loadId` returns a `400 - Bad Request` Response
+        - Test request to `/api/robots/closest` that does not contain an `x` or `y` coordinate returns a `400 - Bad Request` Response
+        - Test request to `/api/robots/closest` to some arbitrarily far x,y-coordinate pairing returns the closest robot
+        - Test request to `/api/robots/closest` to a point close to a cluster of data points returns the robot with highest battery percentage
+    
+    - The last thing it occured to me implement would be some sort of security infrastructure. At the moment the way this API is configured anyone could call it and identify a robot, but perhaps we would want to restrict the ability to call the API to a specific process or user, we could use an OAuth approach and use identity token verification to ensure that the user/service a) is who they say they are and b) has the priveleges to access/modify the data being utilized
+### 4. GitHub Repo
+    - This github repo is available [here](https://github.com/banani720/svc-interview-challenge)
