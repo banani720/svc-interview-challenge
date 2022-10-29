@@ -45,5 +45,4 @@ Should you choose to modify the listening port you may modify the `port` constan
         - Test request to `/api/robots/closest` to a point close to a cluster of data points returns the robot with highest battery percentage
     
     - The last thing it occured to me implement would be some sort of security infrastructure. At the moment the way this API is configured anyone could call it and identify a robot, but perhaps we would want to restrict the ability to call the API to a specific process or user, we could use an OAuth approach and use identity token verification to ensure that the user/service a) is who they say they are and b) has the priveleges to access/modify the data being utilized
-### 4. GitHub Repo
-    - This github repo is available [here](https://github.com/banani720/svc-interview-challenge)
+
